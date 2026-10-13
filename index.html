@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0E2A5C">
+  <meta name="description" content="Formulario de recurrencia 2027 — Subdirección para la Infancia, Secretaría Distrital de Integración Social de Bogotá.">
+  <title>Recurrencia 2027 · SDIS</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ====================================================== ENCABEZADO -->
+  <header class="barra-superior">
+    <div class="barra-superior__fila">
+      <div class="escudo" aria-hidden="true">SDIS</div>
+      <div class="barra-superior__textos">
+        <div class="barra-superior__titulo" id="tituloApp">Recurrencia 2027</div>
+        <div class="barra-superior__sub" id="subtituloApp">Subdirección para la Infancia · SDIS</div>
+      </div>
+      <div class="sesion oculto" id="sesion">
+        <span class="sesion__info" id="sesionInfo"></span>
+        <button type="button" class="sesion__salir" id="btnSalir">Salir</button>
+      </div>
+    </div>
+    <div class="cinta-amarilla" aria-hidden="true"></div>
+  </header>
+
+  <!-- ============================================= BARRA DE TRABAJO -->
+  <!-- Visible solo mientras se diligencia la lista de niñas y niños -->
+  <div class="barra-trabajo oculto" id="barraTrabajo">
+    <div class="barra-trabajo__fila">
+      <button type="button" class="boton boton--claro" id="btnAtras">◀ ATRÁS</button>
+      <button type="button" class="boton boton--enviar" id="btnEnviar" disabled>ENVIAR</button>
+    </div>
+  </div>
+
+  <main class="contenido">
+
+    <!-- ================================================================
+         PANTALLA 0 · INGRESO (LOGIN)
+         ============================================================== -->
+    <section id="pantallaLogin" class="oculto">
+      <div id="zonaLogin"></div>
+      <div class="tarjeta tarjeta--login">
+        <div class="login__marca" aria-hidden="true">SDIS</div>
+        <h2 class="tarjeta__titulo" style="text-align:center">Ingreso al aplicativo</h2>
+        <p class="tarjeta__intro" style="text-align:center">Recurrencia 2027 · Subdirección para la Infancia</p>
+        <form id="formLogin" autocomplete="off" onsubmit="return false;">
+          <div class="campo">
+            <label class="campo__etiqueta" for="inpUsuario">Usuario</label>
+            <input class="control" id="inpUsuario" type="text" autocapitalize="none"
+                   spellcheck="false" placeholder="usuario" autocomplete="username">
+          </div>
+          <div class="campo">
+            <label class="campo__etiqueta" for="inpClave">Contraseña</label>
+            <input class="control" id="inpClave" type="password"
+                   placeholder="contraseña" autocomplete="current-password">
+          </div>
+          <button type="submit" class="boton boton--principal" id="btnIngresar">INGRESAR</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANTALLA 0b · CAMBIO DE CONTRASEÑA (primer ingreso)
+         ============================================================== -->
+    <section id="pantallaCambio" class="oculto">
+      <div id="zonaCambio"></div>
+      <div class="tarjeta tarjeta--login">
+        <h2 class="tarjeta__titulo" style="text-align:center">Cambie su contraseña</h2>
+        <p class="tarjeta__intro" style="text-align:center">
+          Por seguridad, en el primer ingreso debe definir una contraseña nueva.
+        </p>
+        <form id="formCambio" autocomplete="off" onsubmit="return false;">
+          <div class="campo">
+            <label class="campo__etiqueta" for="inpNueva">Nueva contraseña</label>
+            <input class="control" id="inpNueva" type="password"
+                   placeholder="nueva contraseña" autocomplete="new-password">
+            <div class="campo__ayuda" id="ayudaNueva">Mínimo 8 caracteres.</div>
+          </div>
+          <div class="campo">
+            <label class="campo__etiqueta" for="inpNueva2">Confirmar contraseña</label>
+            <input class="control" id="inpNueva2" type="password"
+                   placeholder="repita la contraseña" autocomplete="new-password">
+          </div>
+          <button type="submit" class="boton boton--principal" id="btnGuardarClave" disabled>
+            GUARDAR Y CONTINUAR
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANTALLA 1 · BÚSQUEDA
+         ============================================================== -->
+    <section id="pantallaBusqueda" class="oculto">
+
+      <div id="zonaMensajes"></div>
+
+      <!-- Avances pre-guardados sin enviar -->
+      <div class="tarjeta oculto" id="tarjetaBorradores">
+        <h2 class="tarjeta__titulo">Tiene avances sin enviar</h2>
+        <p class="tarjeta__intro">
+          Estos formularios quedaron pre-guardados en este dispositivo. Mientras no
+          presione ENVIAR, la información no llega a Drive.
+        </p>
+        <div class="borradores" id="borradores"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h2 class="tarjeta__titulo">Consulta de niñas y niños</h2>
+        <p class="tarjeta__intro" id="introApp"></p>
+
+        <div class="cargando-caja" id="cargandoIndice">
+          <span class="rueda"></span>
+          <span>Cargando la base de datos…</span>
+        </div>
+
+        <form id="formBusqueda" class="oculto" autocomplete="off" onsubmit="return false;">
+
+          <div class="fila-doble">
+
+            <!-- Paso 1 · Subdirección Local (columna E de la base) -->
+            <div class="campo">
+              <label class="campo__etiqueta" for="selSubdireccion">
+                <span class="campo__paso">1</span>Subdirección Local
+              </label>
+              <select class="control" id="selSubdireccion">
+                <option value="">Cargando…</option>
+              </select>
+            </div>
+
+            <!-- Paso 2 · Jardín Infantil (columna D, filtrado por la subdirección) -->
+            <div class="campo">
+              <label class="campo__etiqueta" for="selJardin">
+                <span class="campo__paso">2</span>Jardín Infantil
+              </label>
+              <select class="control" id="selJardin" disabled>
+                <option value="">Primero seleccione la subdirección</option>
+              </select>
+              <div class="campo__ayuda" id="ayudaJardin"></div>
+            </div>
+
+            <!-- Paso 3 · Nivel (columna B, filtrado por el jardín) -->
+            <div class="campo">
+              <label class="campo__etiqueta" for="selNivel">
+                <span class="campo__paso">3</span>Nivel
+              </label>
+              <select class="control" id="selNivel" disabled>
+                <option value="">Primero seleccione el jardín</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Protección de datos personales · Habeas Data (se llena desde config.js) -->
+          <div class="habeas" id="bloqueHabeas">
+            <div class="habeas__aviso">
+              <span class="habeas__icono" aria-hidden="true">🔒</span>
+              <div>
+                <p class="habeas__texto" id="habeasAvisoCorto"></p>
+                <button type="button" class="habeas__enlace" id="btnVerPolitica"></button>
+              </div>
+            </div>
+            <label class="habeas__check">
+              <input type="checkbox" id="chkHabeas">
+              <span class="habeas__marca" aria-hidden="true"></span>
+              <span class="habeas__declaracion" id="habeasDeclaracion"></span>
+            </label>
+          </div>
+
+          <button type="button" class="boton boton--principal boton--iniciar" id="btnIniciar" disabled>
+            INICIAR DILIGENCIAMIENTO DE RECURRENCIA
+          </button>
+
+          <p class="campo__ayuda" id="resumenBase" style="margin-top:14px;text-align:center"></p>
+
+        </form>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PANTALLA 2 · DILIGENCIAMIENTO
+         ============================================================== -->
+    <section id="pantallaFormulario" class="oculto">
+
+      <div id="mensajesFormulario"></div>
+
+      <div class="contexto" id="contexto"></div>
+
+      <div class="progreso">
+        <div class="progreso__texto">
+          <span id="progresoTexto"><strong>0 de 0</strong> diligenciados</span>
+          <span class="aviso-guardado" id="avisoGuardado"></span>
+        </div>
+        <div class="progreso__barra" role="progressbar" aria-label="Avance del diligenciamiento">
+          <div class="progreso__relleno" id="progresoRelleno"></div>
+        </div>
+      </div>
+
+      <div class="herramientas">
+        <div class="buscador">
+          <label class="solo-lectores" for="inpBuscarNino">Buscar niña o niño</label>
+          <input id="inpBuscarNino" type="search" placeholder="Buscar por nombre o documento…">
+        </div>
+        <button type="button" class="boton boton--secundario boton--pequeno" id="btnTodosSi">
+          Marcar SÍ a los que faltan
+        </button>
+      </div>
+
+      <div class="lista-ninos" id="listaNinos"></div>
+    </section>
+
+    <!-- ================================================================
+         PANTALLA 3 · CONFIRMACIÓN
+         ============================================================== -->
+    <section id="pantallaFin" class="oculto">
+      <div class="tarjeta">
+        <div class="mensaje mensaje--ok" style="margin-bottom:18px">
+          <strong id="finTitulo">Formulario enviado correctamente</strong>
+          La información quedó consolidada en el archivo de Google Drive.
+        </div>
+
+        <div id="finDetalle" style="margin-bottom:20px"></div>
+
+        <button type="button" class="boton boton--principal" id="btnOtroNivel"
+                style="margin-bottom:10px">
+          DILIGENCIAR OTRO NIVEL
+        </button>
+        <button type="button" class="boton boton--secundario" id="btnVolverInicio">
+          VOLVER AL INICIO
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    Secretaría Distrital de Integración Social · Subdirección para la Infancia<br>
+    Recurrencia 2027 · Bogotá D.C.
+  </footer>
+
+  <!-- ====================================================== MODAL -->
+  <div class="capa oculto" id="capaModal" role="dialog" aria-modal="true"
+       aria-labelledby="modalTitulo">
+    <div class="modal">
+      <h3 class="modal__titulo" id="modalTitulo"></h3>
+      <p class="modal__texto" id="modalTexto"></p>
+      <div class="modal__acciones" id="modalAcciones"></div>
+    </div>
+  </div>
+
+  <!-- ============================== VENTANA DE LA POLÍTICA COMPLETA -->
+  <div class="capa oculto" id="capaPolitica" role="dialog" aria-modal="true"
+       aria-labelledby="politicaTitulo">
+    <div class="modal modal--politica">
+      <div class="modal__cabeza">
+        <h3 class="modal__titulo" id="politicaTitulo"></h3>
+        <button type="button" class="modal__cerrar" id="btnCerrarPolitica"
+                aria-label="Cerrar">✕</button>
+      </div>
+      <div class="politica" id="politicaCuerpo"></div>
+      <div class="modal__acciones">
+        <a class="boton boton--secundario" id="politicaEnlaceOficial" target="_blank" rel="noopener">
+          Ver política oficial completa
+        </a>
+        <button type="button" class="boton boton--principal" id="btnAceptarPolitica">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
