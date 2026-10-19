@@ -15,7 +15,7 @@
 var CONFIG = {
 
   // 1) URL de la aplicacion web de Google Apps Script (debe terminar en /exec)
-  URL_APPS_SCRIPT: 'https://script.google.com/macros/s/AKfycbyz9f9UMBMlVbhTfl-qR2v4ymRaRhqkYlCjHek2A-uqiKDeeWd1WNZVJnqd0RLcG2VQ/exec',
+  URL_APPS_SCRIPT: 'PEGA_AQUI_TU_URL_DE_APPS_SCRIPT',
 
   // 2) Titulo que se muestra en el encabezado
   TITULO: 'Recurrencia 2027',
@@ -26,13 +26,26 @@ var CONFIG = {
          'encuentran en el servicio desean continuar en 2027 en el nivel que ' +
          'les corresponde por su edad.',
 
-  // 4) Opciones del desplegable "HARÁ TRÁNSITO A"
+  // 4) Opciones del desplegable "HARÁ TRÁNSITO A" (casos normales)
   OPCIONES_TRANSITO: [
     '1. Colegio Sed.',
     '2. Opción Privada',
     '3. Traslado a otro lugar del país',
     '4. Jardín SDIS'
   ],
+
+  // 4b) Opciones del desplegable "HARÁ TRÁNSITO A" SOLO para niñas y niños de
+  //     EXTRA EDAD (no pueden continuar en la SDIS en 2027).
+  OPCIONES_TRANSITO_EXTRAEDAD: [
+    '1. Colegio Sed.',
+    '2. Opción Privada',
+    'Aún no sabe qué hacer la familia'
+  ],
+
+  // 4c) Valores de "Nivel 2027 por edad" que se marcan en ROJO (requieren atención)
+  //     y cómo se reconocen (coincidencia parcial, sin importar mayúsculas).
+  NIVELES_EXTRA_EDAD: 'EXTRA EDAD',
+  NIVELES_ENTRE_PARES: 'ENTRE PARES',
 
   // 5) Texto de la opcion que abre los desplegables de tránsito a otro jardín
   OPCION_JARDIN_SDIS: '4. Jardín SDIS',
