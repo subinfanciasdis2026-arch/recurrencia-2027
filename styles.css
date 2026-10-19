@@ -22,6 +22,10 @@
 
   --rojo: #c62828;
   --rojo-suave: #fdecec;
+  /* Casos de atención (extra edad / revisar con equipo entre pares): rojo claro legible */
+  --rojo-dato: #fdecec;
+  --rojo-borde: #f1b4b4;
+  --rojo-texto: #b02020;
 
   --gris-900: #16202e;
   --gris-700: #46546a;
@@ -505,6 +509,10 @@ select.control.cargando { background-color: var(--azul-050); }
   min-width: 0;
 }
 
+/* Casos de ATENCIÓN (extra edad o revisar con equipo entre pares): en ROJO claro */
+.datos-base--alerta > .dato { background: var(--rojo-dato); box-shadow: 0 0 0 .5px var(--rojo-borde); }
+.datos-base--alerta .dato__clave { color: var(--rojo-texto); }
+
 .dato--ancho { grid-column: 1 / -1; }
 
 .dato__clave {
@@ -894,6 +902,7 @@ select.control.cargando { background-color: var(--azul-050); }
     align-content: start;          /* las casillas no se estiran si la derecha crece */
     border-right: 1px solid var(--verde-borde);
   }
+  .datos-base--alerta { border-right: 1px solid var(--rojo-borde); }
   .nino__preguntas { border-left: 1px solid var(--gris-200); }
 }
 
