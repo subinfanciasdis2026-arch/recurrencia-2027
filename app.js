@@ -164,6 +164,24 @@
     });
   }
 
+  // Trae del servidor (Excel/consolidado) lo que YA se envió para este jardín+nivel.
+  // Devuelve { respuestas, backendViejo }. backendViejo = true cuando la aplicación web
+  // publicada aún no tiene la acción 'cargar' (hay que republicar el Codigo.gs).
+  function cargarRespuestasServidor(codJardin, nivel) {
+    return apiPost({ accion: 'cargar', token: estado.auth.token, codJardin: codJardin, nivel: nivel })
+      .then(function (r) {
+        if (r.ok) return { respuestas: r.respuestas || {}, backendViejo: false };
+        if (r.codigo === 'SESION') { forzarRelogin('Su sesión expiró. Vuelva a ingresar.'); throw new Error('SESION'); }
+        if (r.codigo === 'DEBE_CAMBIAR') { mostrarCambio(); throw new Error('DEBE_CAMBIAR'); }
+        var viejo = /no reconocida/i.test(r.error || '');
+        return { respuestas: {}, backendViejo: viejo };
+      })
+      .catch(function (err) {
+        if (err.message === 'SESION' || err.message === 'DEBE_CAMBIAR') throw err;
+        return { respuestas: {}, backendViejo: false };   // fallo de red: se sigue sin carga del servidor
+      });
+  }
+
   /* ====================================================== LOGIN */
   function alIngresar(e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -540,8 +558,22 @@
         if (!estado.ninos.length) {
           throw new Error('No se encontraron niñas ni niños en este nivel.');
         }
+        // Trae del servidor TODO lo que ya se envió para este jardín + nivel.
+        return cargarRespuestasServidor(s.codJardin, s.nivel);
+      })
+      .then(function (res) {
+        var servidor = (res && res.respuestas) ? res.respuestas : {};
+        var local = leerBorradorSilencioso() || {};
+        var hayServidor = Object.keys(servidor).length > 0;
+        var hayLocal = Object.keys(local).length > 0;
 
-        estado.respuestas = leerBorrador() || {};
+        // 1) Base = TODO lo ya enviado (Excel). 2) Encima, el pre-guardado local
+        //    sin enviar (por niña/niño gana lo no enviado).
+        var combinado = {};
+        Object.keys(servidor).forEach(function (k) { combinado[k] = servidor[k]; });
+        Object.keys(local).forEach(function (k) { combinado[k] = local[k]; });
+        estado.respuestas = combinado;
+
         estado.filtro = '';
         $('inpBuscarNino').value = '';
 
@@ -549,6 +581,24 @@
         pintarListaNinos();
         actualizarProgreso();
         limpiarZona('mensajesFormulario');
+
+        if (res && res.backendViejo) {
+          mensaje('mensajesFormulario', 'error', 'El servidor está desactualizado',
+            'No se pudo recuperar del Excel lo que ya se había enviado para este nivel, porque la ' +
+            'aplicación web de Google Apps Script todavía no tiene la función de recuperación. Actualice el ' +
+            'archivo Codigo.gs y vuelva a publicarlo como NUEVA versión (Implementar → Administrar ' +
+            'implementaciones → editar → Versión nueva). Por ahora solo se muestra el pre-guardado local, si lo hay.');
+        } else if (hayServidor && hayLocal) {
+          mensaje('mensajesFormulario', 'info', 'Se cargó la información del nivel',
+            'Se trajo lo ya enviado y, encima, su pre-guardado sin enviar. Puede revisar, ajustar y volver a enviar.');
+        } else if (hayServidor) {
+          mensaje('mensajesFormulario', 'info', 'Se cargó lo ya enviado',
+            'Se trajo lo que ya estaba registrado para este nivel. Puede revisarlo, ajustarlo y volver a enviar.');
+        } else if (hayLocal) {
+          mensaje('mensajesFormulario', 'info', 'Se recuperó su avance',
+            'Encontramos un pre-guardado en este dispositivo (sin enviar). Puede continuar donde quedó.');
+        }
+
         mostrarPantalla('pantallaFormulario');
       })
       .catch(function (err) {
@@ -615,6 +665,22 @@
     cont.appendChild(fragmento);
   }
 
+  // Reconoce los dos casos que deben verse en ROJO (atención) según el
+  // "Nivel 2027 por edad". La comparación ignora mayúsculas y TODOS los espacios,
+  // para tolerar tanto "EXTRA EDAD 2027" como "REVISAR CON EQUIPO ENTREPARES".
+  function sinEspacios_(s) {
+    return txt(s).toUpperCase().replace(/\s+/g, '');
+  }
+  function esExtraEdad(nino) {
+    return sinEspacios_(nino && nino.n27).indexOf(sinEspacios_(CONFIG.NIVELES_EXTRA_EDAD)) >= 0;
+  }
+  function esEntrePares(nino) {
+    return sinEspacios_(nino && nino.n27).indexOf(sinEspacios_(CONFIG.NIVELES_ENTRE_PARES)) >= 0;
+  }
+  function esCasoAlerta(nino) {
+    return esExtraEdad(nino) || esEntrePares(nino);
+  }
+
   function construirTarjetaNino(nino, numero) {
     var r = estado.respuestas[nino.id] || {};
 
@@ -640,7 +706,9 @@
     tarjeta.appendChild(cabeza);
 
     /* --- Datos que vienen del Excel ----------------------------------- */
-    var base = crear('div', 'datos-base');
+    // Los casos de EXTRA EDAD o REVISAR CON EQUIPO ENTRE PARES se muestran en
+    // ROJO (atención), el resto en verde.
+    var base = crear('div', 'datos-base' + (esCasoAlerta(nino) ? ' datos-base--alerta' : ''));
     base.appendChild(dato('Fecha de nacimiento', nino.fn));
     base.appendChild(dato('Edad a 31/03/2027', nino.e27 + (nino.e27 === '1' ? ' año' : ' años')));
     base.appendChild(dato('Nivel actual', estado.seleccion.nivel));
@@ -723,7 +791,9 @@
     var selT = crear('select', 'control');
     selT.id = 'transito-' + nino.id;
     selT.appendChild(opcion('', 'Seleccione una opción…'));
-    CONFIG.OPCIONES_TRANSITO.forEach(function (o) { selT.appendChild(opcion(o, o)); });
+    // Para EXTRA EDAD solo se ofrecen las opciones externas + "aún no sabe la familia".
+    var opcionesT = esExtraEdad(nino) ? CONFIG.OPCIONES_TRANSITO_EXTRAEDAD : CONFIG.OPCIONES_TRANSITO;
+    opcionesT.forEach(function (o) { selT.appendChild(opcion(o, o)); });
     selT.value = txt(r.transitoA);
     campoT.appendChild(etiqT);
     campoT.appendChild(selT);
@@ -949,6 +1019,17 @@
           '. Puede continuar donde quedó.');
         return paquete.respuestas;
       }
+    } catch (e) { /* borrador corrupto: se ignora */ }
+    return null;
+  }
+
+  // Igual que leerBorrador, pero sin mostrar mensaje (el llamador decide qué avisar).
+  function leerBorradorSilencioso() {
+    try {
+      var crudo = localStorage.getItem(claveBorrador());
+      if (!crudo) { return null; }
+      var paquete = JSON.parse(crudo);
+      if (paquete && paquete.respuestas) { return paquete.respuestas; }
     } catch (e) { /* borrador corrupto: se ignora */ }
     return null;
   }
@@ -1231,6 +1312,9 @@
     $('btnEnviar').textContent = 'ENVIAR';
     $('btnAtras').disabled = false;
 
+    // Cancela cualquier pre-guardado pendiente (temporizador de 400 ms) para que
+    // no vuelva a crear el borrador justo después de borrarlo tras un envío exitoso.
+    if (temporizadorGuardado) { clearTimeout(temporizadorGuardado); temporizadorGuardado = null; }
     borrarBorrador();
 
     var s = estado.seleccion;
