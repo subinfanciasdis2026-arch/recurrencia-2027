@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/33667609/README.md)
+[README.md](https://github.com/user-attachments/files/33667627/README.md)
 # Recurrencia 2027 · SDIS (con login)
 
 Aplicativo móvil para revisar si las niñas y los niños que hoy están en el
